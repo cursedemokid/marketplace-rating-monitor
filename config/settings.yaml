@@ -1,0 +1,59 @@
+# Пороги сигналов, параметры расчёта, локального входа и API.
+#
+# Правило то же, что в Top Active: любое число живёт здесь, а не константой
+# в коде. Правка порога требует перезапуска, но не деплоя.
+#
+# Стартовые значения — из docs/02_ГЭПЫ_И_ВОПРОСЫ.md → G-06. Их можно
+# калибровать администратору по фактическим
+# сигналам; рабочая доставка разрешена заказчиком 15.10.2026.
+
+period:
+  timezone: Europe/Moscow   # NFR-8. Правка требует перезапуска
+
+collector:
+  run_at: "09:00"           # ежедневный прогон, docs/04 этап 1
+  recheck_days: 7           # FR-1.5: аналитика WB досчитывается задним числом
+  health_grace_hours: 2     # NFR-1: после 11:00 ждём успешный прогон за вчера
+  batch_item_rating: 50     # жёсткий лимит метода item-rating
+  batch_sales_funnel: 1000  # лимит метода воронки продаж
+
+# Пороги сигналов переехали в таблицу wb.signal_settings (миграция 0002).
+# Причина — FR-3.8: администратор меняет их без участия разработчиков,
+# а значит и без правки файла и перезапуска. Смотреть и править так:
+#   select * from wb.signal_settings;
+#   update wb.signal_settings set threshold = 3.0 where signal_type = 'negative_spike';
+
+notify:
+  channel: yandex_messenger  # yandex_messenger | telegram
+  dry_run: false             # рабочая доставка в групповой чат Телемоста
+
+ai:
+  classify_stars_max: 3      # классифицируем только негатив
+  batch_size: 30
+  daily_limit: 300          # максимум отзывов за один автоматический прогон
+  discover_min_cluster_size: 15   # HDBSCAN, FR-5.4
+  monthly_budget_usd: 100         # NFR-7
+  max_input_tokens: 32768        # полный резерв входа классификации и предел учёта usage
+  max_output_tokens: 4096
+  request_timeout_seconds: 180
+  input_usd_per_1m: 1.0          # A6API model_ratio 0.5 × $2 / 1M × group_ratio 1
+  output_usd_per_1m: 1.0         # completion_ratio 1; /api/pricing + /api/status
+  tariff_source_url: https://api.example.invalid/api/pricing
+  tariff_checked_on: DemoPhone
+  automatic_enabled: true        # F1 0.826, первая попытка 100/100; docs/ai-acceptance-DemoPhone.json
+
+# Вход для небольшой команды; по умолчанию API слушает только loopback.
+auth:
+  REDACTED_min_length: 12
+  session_hours: 8
+  idle_minutes: 30
+  max_failed_logins: 5
+  lock_minutes: 15
+  scrypt_n: 131072
+  scrypt_r: 8
+  scrypt_p: 1
+  scrypt_maxmem_mb: 256
+
+api:
+  host: 127.0.0.1
+  port: 8080

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Python E2E с Playwright"
+  short_description: "E2E тесты Python веб приложений через pytest и браузер"
+  default_prompt: "Используй $pytest-playwright-e2e, чтобы добавить или исправить E2E тесты Python веб приложения."

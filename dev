@@ -1,0 +1,102 @@
+#!/usr/bin/env bash
+# Команды разработчика. Обычный скрипт, а не Makefile: make в системе может
+# не стоять (на машине разработчика его не оказалось), а bash есть всегда.
+#
+#   ./dev install   зависимости и .venv
+#   ./dev up        Postgres и Redis в контейнерах
+#   ./dev down      остановить контейнеры
+#   ./dev migrate   применить миграции
+#   ./dev check     прочитать конфиг и показать, что система видит
+#   ./dev health    проверить свежесть полного ночного сбора
+#   ./dev history   показать готовность 14-дневной базы сравнения
+#   ./dev backup    создать архив PostgreSQL в backups/ или WB_BACKUP_DIR
+#   ./dev verify-backup ПУТЬ  проверить восстановление в отдельную базу
+#   ./dev collect   сбор за вчера (нужны токены обоих кабинетов WB)
+#   ./dev analyze   расчёт дельт и сигналов по собранным снимкам
+#   ./dev notify    отправка накопленных сигналов в чат
+#   ./dev daily     сбор, классификация, анализ и доставка за вчерашний день
+#   ./dev catch-up  восстановить пропущенные дни до запуска планировщика
+#   ./dev scheduler догон пропусков и ежедневный прогон по расписанию
+#   ./dev export-ratings --start ... --end ... [--nm-id ...] [--output ...]
+#   ./dev export-reasons --start ... --end ... [--nm-id ...] [--output ...]
+#   ./dev import-nomenclature --input FILE.xlsx [--confirm]
+#   ./dev classify --until YYYY-MM-DD --limit N
+#   ./dev discover --until YYYY-MM-DD [--limit N]
+#   ./dev name-candidates --limit N
+#   ./dev quality-sample --count 100 --output outputs/quality.csv
+#   ./dev quality-evaluate --input outputs/quality.csv
+#   ./dev quality-review --input outputs/quality.csv
+#   ./dev quality-approve --input review.xlsx --reviewer NAME --output DIR
+#   ./dev quality-verify --input verification_100.csv
+#   ./dev add-user --username ... --role admin|viewer (пароль вводится скрыто)
+#   ./dev api       защищённый REST API на адресе из config/settings.yaml
+#   ./dev test      тесты
+#   ./dev e2e       браузерные тесты в отдельной временной базе
+#   ./dev performance  нагрузочный стенд: 1000 товаров, отдельная временная БД
+#   ./dev lint      ruff
+#   ./dev types     mypy
+#   ./dev all       lint + types + test
+#   ./dev models    сгенерировать модели из локальных спек в specs/
+set -euo pipefail
+cd "$(dirname "$0")"
+
+case "${1:-help}" in
+  install) uv sync ;;
+  up)      docker compose up -d ;;
+  down)    docker compose down ;;
+  migrate) uv run python -m app.migrate ;;
+  check)   uv run python -m app check ;;
+  health)  uv run python -m app health ;;
+  history) shift; uv run python -m app history "$@" ;;
+  backup)  bash scripts/backup-db.sh ;;
+  verify-backup) shift; bash scripts/verify-backup.sh "$@" ;;
+  collect) shift; uv run python -m app collect "$@" ;;
+  analyze) shift; uv run python -m app analyze "$@" ;;
+  notify)  uv run python -m app notify ;;
+  daily)   uv run python -m app daily ;;
+  catch-up) uv run python -m app catch-up ;;
+  scheduler) uv run python -m app scheduler ;;
+  export-ratings) shift; uv run python -m app export-ratings "$@" ;;
+  export-reasons) shift; uv run python -m app export-reasons "$@" ;;
+  import-nomenclature) shift; uv run python -m app import-nomenclature "$@" ;;
+  classify) shift; uv run python -m app classify "$@" ;;
+  discover) shift; uv run python -m app discover "$@" ;;
+  name-candidates) shift; uv run python -m app name-candidates "$@" ;;
+  quality-sample) shift; uv run python -m app quality-sample "$@" ;;
+  quality-evaluate) shift; uv run python -m app quality-evaluate "$@" ;;
+  quality-review) shift; uv run python -m app quality-review "$@" ;;
+  quality-approve) shift; uv run python -m app quality-approve "$@" ;;
+  quality-verify) shift; uv run python -m app quality-verify "$@" ;;
+  add-user) shift; uv run python -m app add-user "$@" ;;
+  api)     uv run python -m app api ;;
+  test)    shift; uv run pytest "$@" ;;
+  e2e)     shift; uv run --group e2e python scripts/run_e2e.py "$@" ;;
+  performance) shift; uv run --group e2e python scripts/run_performance.py "$@" ;;
+  lint)    uv run ruff check app tests e2e performance scripts/run_e2e.py scripts/run_performance.py scripts/benchmark_live_collect.py && uv run ruff format --check app tests e2e performance scripts/run_e2e.py scripts/run_performance.py scripts/benchmark_live_collect.py ;;
+  types)   uv run mypy app ;;
+  all)     ./dev lint && ./dev types && ./dev test ;;
+  models)
+    if [ ! -d specs ]; then
+      echo "Нет каталога specs/. Скачайте спецификации БРАУЗЕРОМ:"
+      echo "  https://dev.wildberries.ru/api/swagger/yaml/ru/01-general.yaml"
+      echo "  https://dev.wildberries.ru/api/swagger/yaml/ru/02-items.yaml"
+      echo "  https://dev.wildberries.ru/api/swagger/yaml/ru/09-communications.yaml"
+      echo "  https://dev.wildberries.ru/api/swagger/yaml/ru/11-analytics.yaml"
+      echo
+      echo "Командой не получится: Wildberries отвечает 498 на любой запрос"
+      echo "не из браузера. Подробности — docs/05_ПЛАН_НА_PYTHON.md § 4.1."
+      exit 1
+    fi
+    mkdir -p app/adapters/wb/generated
+    for spec in specs/*.yaml; do
+      name=$(basename "$spec" .yaml)
+      echo "→ $name"
+      uv run datamodel-codegen \
+        --input "$spec" --input-file-type openapi \
+        --output "app/adapters/wb/generated/${name}.py" \
+        --output-model-type pydantic_v2.BaseModel \
+        --target-python-version 3.12
+    done
+    ;;
+  *) sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//' ;;
+esac

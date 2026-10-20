@@ -1,0 +1,23 @@
+# Локальная разработка: база и кэш в контейнерах, приложение из VS Code.
+# На продуктиве база может быть внешней — тогда postgres отсюда убирается.
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: wb_rating_monitor
+      POSTGRES_USER: wb
+      POSTGRES_PASSWORD: wb
+      TZ: Europe/Moscow
+    ports: ["5432:5432"]
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wb -d wb_rating_monitor"]
+      interval: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+
+volumes:
+  pgdata:

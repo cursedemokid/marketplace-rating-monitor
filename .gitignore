@@ -1,0 +1,42 @@
+# Секреты — никогда в git
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# Исходные материалы заказчика — не в репозиторий
+01_ТЗ_ИСХОДНИК/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+
+# Сгенерированные из OpenAPI модели WB: перегенерируются через `make models`.
+# Если решите коммитить их — снимите эту строку, тогда дифф спеки виден в PR.
+app/adapters/wb/models/
+
+# Node (фронтенд появится на этапе 6)
+node_modules/
+dist/
+.vite/
+
+# Логи, выгрузки, временное
+*.log
+logs/
+tmp/
+exports/
+outputs/
+backups/
+models/
+.DS_Store
+
+# IDE — .vscode/ коммитим намеренно: настройки общие для команды
+.idea/
+*.swp
