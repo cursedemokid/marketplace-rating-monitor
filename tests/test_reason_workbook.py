@@ -9,7 +9,7 @@ from zipfile import ZipFile
 
 from app.repositories.reporting import ReasonReport, ReasonReportRow
 
-NS = {"s": "http://service.example.invalid/spreadsheetml/2006/main"}
+NS = {"s": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
 
 
 def test_reference_reasons_are_visible_but_not_company_complaints_in_charts() -> None:

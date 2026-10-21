@@ -201,7 +201,7 @@ def test_filtered_exports_download_valid_xlsx_with_expected_product(
             assert "E2E-OTHER" not in workbook_text
             assert "E2E-NO-TITLE" not in workbook_text
             assert "E2E-ADD" not in workbook_text
-            ns = {"x": "http://service.example.invalid/spreadsheetml/2006/main"}
+            ns = {"x": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
             strings = ET.fromstring(workbook.read("xl/sharedStrings.xml"))
             shared = ["".join(item.itertext()) for item in strings]
             sheet = ET.fromstring(workbook.read("xl/worksheets/sheet1.xml"))
@@ -226,7 +226,7 @@ def test_filtered_exports_download_valid_xlsx_with_expected_product(
         else:
             # Reasons aggregate products. The other cabinet has another negative
             # review: a missing filter would incorrectly give two instead of one.
-            ns = {"x": "http://service.example.invalid/spreadsheetml/2006/main"}
+            ns = {"x": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
             strings = ET.fromstring(workbook.read("xl/sharedStrings.xml"))
             shared = ["".join(item.itertext()) for item in strings]
             counts = ET.fromstring(workbook.read("xl/worksheets/sheet2.xml"))

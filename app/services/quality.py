@@ -61,9 +61,9 @@ _REVIEW_HEADERS = (
 )
 _MIN_QUALITY_SAMPLE_SIZE = 100
 _XLSX_NS = {
-    "main": "http://service.example.invalid/spreadsheetml/2006/main",
-    "rel": "http://service.example.invalid/officeDocument/2006/relationships",
-    "pkg": "http://service.example.invalid/package/2006/relationships",
+    "main": "http://schemas.openxmlformats.org/spreadsheetml/2006/main",
+    "rel": "http://schemas.openxmlformats.org/officeDocument/2006/relationships",
+    "pkg": "http://schemas.openxmlformats.org/package/2006/relationships",
 }
 
 

@@ -71,8 +71,8 @@ def test_rating_dates_are_numeric_with_excel_invariant_literal_dots() -> None:
     )
 
     content = make_rating_workbook(report)
-    ns = {"x": "http://service.example.invalid/spreadsheetml/2006/main"}
-    chart_ns = {"c": "http://service.example.invalid/drawingml/2006/chart"}
+    ns = {"x": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
+    chart_ns = {"c": "http://schemas.openxmlformats.org/drawingml/2006/chart"}
     with ZipFile(BytesIO(content)) as archive:
         styles = ET.fromstring(archive.read("xl/styles.xml"))
         sheet = ET.fromstring(archive.read("xl/worksheets/sheet2.xml"))
@@ -148,7 +148,7 @@ def test_comparison_columns_are_numeric_and_daily_charts_use_new_counts() -> Non
             )
         },
     )
-    ns = {"x": "http://service.example.invalid/spreadsheetml/2006/main"}
+    ns = {"x": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
     with ZipFile(BytesIO(make_rating_workbook(report))) as archive:
         strings = ET.fromstring(archive.read("xl/sharedStrings.xml"))
         labels = ["".join(item.itertext()) for item in strings]
@@ -156,7 +156,7 @@ def test_comparison_columns_are_numeric_and_daily_charts_use_new_counts() -> Non
         rows = main.findall(".//x:row", ns)
         header = next(row for row in rows if row.attrib["r"] == "6")
         columns = {
-            labels[int(cell.findtext("x:v", namespaces=ns))]: cell.attrib["r"].rstrip("3228787319")
+            labels[int(cell.findtext("x:v", namespaces=ns))]: cell.attrib["r"].rstrip("0123456789")
             for cell in header.findall("x:c", ns)
             if cell.get("t") == "s"
         }
@@ -179,7 +179,7 @@ def test_comparison_columns_are_numeric_and_daily_charts_use_new_counts() -> Non
         assert daily_cells["D2"].findtext("x:v", namespaces=ns) == "0.2"
         assert daily_cells["B3"].findtext("x:v", namespaces=ns) in {None, ""}
         chart = ET.fromstring(archive.read("xl/charts/chart2.xml"))
-        chart_ns = {"c": "http://service.example.invalid/drawingml/2006/chart"}
+        chart_ns = {"c": "http://schemas.openxmlformats.org/drawingml/2006/chart"}
         blanks = chart.find("c:dispBlanksAs", chart_ns)
         assert blanks is None or blanks.attrib["val"] == "gap"
 
@@ -198,7 +198,7 @@ def test_daily_product_code_is_text_even_if_it_starts_with_equals() -> None:
         ratings_by_day={999001001: (4.9,)},
         daily_by_product={999001001: (DailyPoint(day, counts, {}, "ok"),)},
     )
-    ns = {"x": "http://service.example.invalid/spreadsheetml/2006/main"}
+    ns = {"x": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
     with ZipFile(BytesIO(make_rating_workbook(report))) as archive:
         daily = ET.fromstring(archive.read("xl/worksheets/sheet3.xml"))
         source_row = daily.findall(".//x:row", ns)[-1]

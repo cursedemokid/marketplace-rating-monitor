@@ -18,9 +18,9 @@ from app.repositories.nomenclature import (
     NomenclatureRepository,
 )
 
-_NS = {"x": "http://service.example.invalid/spreadsheetml/2006/main"}
-_REL_NS = "{http://service.example.invalid/officeDocument/2006/relationships}"
-_PKG_REL_NS = {"r": "http://service.example.invalid/package/2006/relationships"}
+_NS = {"x": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
+_REL_NS = "{http://schemas.openxmlformats.org/officeDocument/2006/relationships}"
+_PKG_REL_NS = {"r": "http://schemas.openxmlformats.org/package/2006/relationships"}
 _ACCOUNT_KEYS = {"НК Джакс": "default", "Элалис": "DemoSeller"}
 _HEADERS = {
     "Кабинет": "account",
